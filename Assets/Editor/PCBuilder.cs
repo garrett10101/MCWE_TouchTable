@@ -25,6 +25,7 @@ public static class PCBuilder
                 "Assets/Scenes/TouchPop.unity",
                 "Assets/Scenes/ScrollableText.unity",
                 "Assets/Scenes/BackgroundBlend.unity",
+                "Assets/Scenes/Map.unity",
             },
             locationPathName = OutputPath,
             target           = BuildTarget.StandaloneLinux64,

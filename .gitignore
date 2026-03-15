@@ -38,3 +38,11 @@
 # OS files
 .DS_Store
 Thumbs.db
+
+# Build outputs
+/bin/
+/Bin/
+*.apk
+*.aab
+*.ipa
+*.app/

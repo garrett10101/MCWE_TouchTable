@@ -23,7 +23,7 @@ A Unity 2D test project demonstrating multi-touch and mouse input on both **PC**
 
 1. Open **Unity Hub** and click **Open → Add project from disk**, select this folder.
 2. Unity opens the project and compiles scripts automatically.
-3. In the menu bar run **Tools → TouchTable → Build All Scenes** to (re)generate all scene files and the Target prefab after any script or layout change.
+3. Open **Tools → TouchTable → Build Manager** to configure scenes and trigger builds directly from the Editor.
 4. Open any scene from `Assets/Scenes/` and press **Play** to test in the editor.
 
 > **Input:** all scenes support both mouse/keyboard (PC) and multi-touch (mobile) via the New Input System.
@@ -32,10 +32,24 @@ A Unity 2D test project demonstrating multi-touch and mouse input on both **PC**
 
 ## Build & Run
 
+### Using the Build Manager (Editor GUI)
+
+Open via **Tools → TouchTable → Build Manager**.
+
+| Tab | Purpose |
+|-----|---------|
+| **Scene Setup** | Discover scenes, toggle which are included in builds, apply to File → Build Settings |
+| **PC Build** | Select Linux / Windows / macOS target, choose output folder, click Build |
+| **Mobile Build** | Android: refresh connected devices, build APK, optionally install via adb. iOS: build Xcode project (macOS only) |
+
+> The headless CLI scripts (`PCBuilder.cs`, `AndroidBuilder.cs`) are still available for CI/automated use — see sections below.
+
+---
+
 ### Play in Editor (all platforms)
 
 1. Open the project in Unity Hub.
-2. Run **Tools → TouchTable → Build All Scenes**.
+2. Open **Tools → TouchTable → Build Manager → Scene Setup** and click **Refresh**, then **Apply to Build Settings**.
 3. Open `Assets/Scenes/MainMenu.unity`.
 4. Press **Play**.
 
@@ -119,14 +133,100 @@ adb shell monkey -p com.touchtable.demo -c android.intent.category.LAUNCHER 1
 
 ---
 
+## Map Markers
+
+Map markers use the `PopupText_With_Picture` component — no code required to add or update content.
+
+**To create a marker:**
+1. Right-click in Hierarchy → **Create Empty** → rename (e.g. `SpringLake-Video`).
+2. **Add Component → Sprite Renderer**
+3. **Add Component → Box Collider 2D**
+4. **Add Component → PopupText_With_Picture**
+5. In the Inspector set:
+   - **Marker Sprite** — drag any circle/pin sprite (falls back to Unity's built-in Knob if empty)
+   - **Marker Color** — color picker
+   - **Popup Picture** — optional image sprite shown at the top of the popup
+   - **Text File** — drag a `.txt` TextAsset from Project (takes priority over Popup Text)
+   - **Popup Text** — or type content directly in the text area
+6. Position the marker on the map in the Scene view.
+7. Press **Play** — clicking the marker shows a scrollable popup near the tap point.
+
+The popup panel is built at runtime and shared across all markers. Clicking the background or the X button closes it.
+
+> Run **Tools → TouchTable → Setup Map Popup** once to remove any legacy `PopupPanel`/`PopupManager` objects from an older scene.
+
+### Video Map Markers
+
+Video markers use the `PopupVideo` component — no code required.
+
+**To create a video marker:**
+1. Right-click in Hierarchy → **Create Empty** → rename (e.g. `SpringLake-Video`)
+2. **Add Component → Sprite Renderer**
+3. **Add Component → Box Collider 2D**
+4. **Add Component → PopupVideo**
+5. In the Inspector set:
+   - **Marker Sprite** — drag any circle/pin sprite (falls back to Unity's built-in Knob)
+   - **Marker Color** — color picker
+   - **Popup Width / Height** — size of the dark popup panel (default 640 × 520)
+   - **Position Mode** — `NearMarker` opens popup near tap point; `Centered` always centers on screen
+   - **Tap Offset** — nudge the popup away from the finger (NearMarker only; default 20, 20)
+   - **Video Clip** — drag a `VideoClip` asset from the Project window
+   - **Video Width / Height** — bounding box for the video inside the popup (default 616 × 346 for 16:9).
+     Set these to match your clip's native resolution for best quality (e.g. 1280 × 720 for 720p).
+   - **Loop Video** — if enabled, video loops until the user closes the popup
+   - **Close On End** — if enabled (and Loop Video is off), popup auto-closes when playback finishes
+   - **Show Title** — toggle a header text strip above the video
+   - **Title Text** — text for the header (leave empty to suppress it even if Show Title is on)
+   - **Title Font Size / Color / Header Height** — appearance tweaks
+6. Position the marker GameObject on the map in the Scene view.
+7. Press **Play** — clicking/tapping the marker shows the video popup.
+
+> **Note:** `Close On End` has no effect when `Loop Video` is also enabled — Unity does not fire
+> the end-of-video event for looping clips. A warning is logged in the Console if both are set.
+>
+> Each video marker owns its own hidden popup panel built in `Start()`.
+> The `VideoPlayer` and `RenderTexture` are created once per marker — not per click.
+> Recommended maximum `RenderTexture` size: 1280 × 720 per marker.
+
+### Image Slider Map Markers
+
+Image slider markers use the `PopupImageSlider` component — no code required.
+
+**To create an image slider marker:**
+1. Right-click in Hierarchy → **Create Empty** → rename (e.g. `SpringLake-Photos`)
+2. **Add Component → Sprite Renderer**
+3. **Add Component → Box Collider 2D**
+4. **Add Component → PopupImageSlider**
+5. In the Inspector set:
+   - **Marker Sprite** — drag any circle/pin sprite (falls back to Unity's built-in Knob)
+   - **Marker Color** — color picker
+   - **Popup Width / Height** — size of the dark popup panel (default 620 × 680)
+   - **Position Mode** — `NearMarker` opens near tap; `Centered` always centers on screen
+   - **Tap Offset** — nudge popup away from the finger (NearMarker only; default 20, 20)
+   - **Slides** — expand the array; set **Size** to the number of images; for each element:
+     - Drag a **Sprite** (photo/image asset from Project window) into **Picture**
+     - Optionally type a **Caption** in the text area — shown below the image when the slider is near that image
+   - **Show Captions** — global toggle; when off, the caption area is hidden for all slides
+   - **Caption Font Size / Color / Height** — appearance of the caption strip
+   - **Slider Height / Colors** — visual style of the slider bar and handle
+6. Position the marker GameObject on the map in the Scene view.
+7. Press **Play** — clicking/tapping the marker opens the popup. Drag the slider left/right to crossfade between images.
+
+> The slider crossfades smoothly between adjacent images. The caption updates to the nearest slide's
+> text as the slider moves. A slide with no caption hides the caption box automatically.
+> When only one image is assigned, the slider is hidden.
+> Each marker owns its own hidden popup panel built at startup — not per click.
+
+---
+
 ## Project Structure
 
 ```
 Assets/
   Editor/
-    SceneBuilder.cs       # Generates all scenes — run via Tools → TouchTable → Build All Scenes
-    AndroidBuilder.cs     # Headless Android APK build (-executeMethod AndroidBuilder.Build)
-    PCBuilder.cs          # Headless PC standalone build (-executeMethod PCBuilder.Build)
+    TouchTableBuildWindow.cs  # Interactive Build Manager (Tools → TouchTable → Build Manager)
+    AndroidBuilder.cs         # Headless Android APK build (-executeMethod AndroidBuilder.Build)
+    PCBuilder.cs              # Headless PC standalone build (-executeMethod PCBuilder.Build)
   Prefabs/
     Target.prefab         # Red circle used in Touch Pop scene
   Resources/

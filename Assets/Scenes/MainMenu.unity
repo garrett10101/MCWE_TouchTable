@@ -227,7 +227,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
   startButtonObject: {fileID: 796912180}
   quitButtonObject: {fileID: 2136085782}
-  gameplaySceneName: ScrollableText
+  gameplaySceneName: Map
   firstSelected: {fileID: 0}
 --- !u!4 &485039308
 Transform:

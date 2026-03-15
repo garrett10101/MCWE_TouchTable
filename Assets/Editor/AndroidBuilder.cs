@@ -37,6 +37,7 @@ public static class AndroidBuilder
                 "Assets/Scenes/TouchPop.unity",
                 "Assets/Scenes/ScrollableText.unity",
                 "Assets/Scenes/BackgroundBlend.unity",
+                "Assets/Scenes/Map.unity",
             },
             locationPathName = OutputApk,
             target           = BuildTarget.Android,
