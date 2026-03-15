@@ -6,8 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 8c9cfa26abfee488c85f1582747f6a02
+    path: Assets/Scenes/MainMenu.unity
+    guid: c4a685de841c296d09dd3adb8a20d42d
+  - enabled: 1
+    path: Assets/Scenes/TouchPop.unity
+    guid: 782151a593b14ac35bf8dd3ae9b3210c
+  - enabled: 1
+    path: Assets/Scenes/ScrollableText.unity
+    guid: fe84c35d39a63c9a9a1141930f01a21c
+  - enabled: 1
+    path: Assets/Scenes/BackgroundBlend.unity
+    guid: 8516306a3ec770b4da1b505381689a27
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
