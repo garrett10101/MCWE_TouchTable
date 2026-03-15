@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Manages the spawning and lifetime of touch targets for a simple whack‑a‑mole style test.
@@ -71,19 +72,24 @@ public class TouchPopManager : MonoBehaviour
             }
         }
 
-        // Handle touch input for multi‑touch devices
-        foreach (Touch touch in Input.touches)
+        // Handle touch input for multi-touch devices (New Input System)
+        var touchscreen = Touchscreen.current;
+        if (touchscreen != null)
         {
-            if (touch.phase == TouchPhase.Began)
+            foreach (var touch in touchscreen.touches)
             {
-                ProcessTouchAtPosition(touch.position);
+                if (touch.phase.ReadValue() == UnityEngine.InputSystem.TouchPhase.Began)
+                {
+                    ProcessTouchAtPosition(touch.position.ReadValue());
+                }
             }
         }
 
         // Handle mouse input in the editor or desktop builds for convenience
-        if (Input.GetMouseButtonDown(0))
+        var mouse = Mouse.current;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
-            ProcessTouchAtPosition(Input.mousePosition);
+            ProcessTouchAtPosition(mouse.position.ReadValue());
         }
     }
 
