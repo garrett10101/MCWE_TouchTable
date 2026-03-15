@@ -1,0 +1,177 @@
+# Release Workflow
+# Triggered when a version tag (v*) is pushed, e.g. git tag v1.0.0 && git push --tags
+#
+# Jobs run in parallel:
+#   build-linux   → TouchTable-Linux-x64-<tag>.zip
+#   build-windows → TouchTable-Windows-x64-<tag>.zip
+#   build-android → TouchTable-<tag>.apk
+#
+# After all builds succeed, the "release" job creates a GitHub Release and
+# attaches all three binaries as downloadable assets.
+#
+# Required secrets (same as build.yml):
+#   UNITY_LICENSE  OR  UNITY_EMAIL + UNITY_PASSWORD
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  UNITY_VERSION: 6000.3.11f1
+
+jobs:
+  # ── PC: Linux x64 ────────────────────────────────────────────────────────────
+  build-linux:
+    name: Build — Linux x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Linux-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Linux-
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_TARGET:       Linux64
+          BUILD_OUTPUT_PATH:  /github/workspace/Builds/Linux/TouchTable
+        with:
+          unityVersion:   ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneLinux64
+          buildMethod:    PCBuilderCI.Build
+
+      - name: Package (zip)
+        run: |
+          cd Builds/Linux
+          zip -r "../../TouchTable-Linux-x64-${{ github.ref_name }}.zip" .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: TouchTable-Linux-x64-${{ github.ref_name }}.zip
+
+  # ── PC: Windows x64 ──────────────────────────────────────────────────────────
+  build-windows:
+    name: Build — Windows x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Windows-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Windows-
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_TARGET:       Windows64
+          BUILD_OUTPUT_PATH:  /github/workspace/Builds/Windows/TouchTable.exe
+        with:
+          unityVersion:   ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneWindows64
+          buildMethod:    PCBuilderCI.Build
+
+      - name: Package (zip)
+        run: |
+          cd Builds/Windows
+          zip -r "../../TouchTable-Windows-x64-${{ github.ref_name }}.zip" .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: TouchTable-Windows-x64-${{ github.ref_name }}.zip
+
+  # ── Mobile: Android APK ───────────────────────────────────────────────────────
+  build-android:
+    name: Build — Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Android-
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_OUTPUT_PATH: /github/workspace/Builds/Android/TouchTable.apk
+        with:
+          unityVersion:      ${{ env.UNITY_VERSION }}
+          targetPlatform:    Android
+          buildMethod:       AndroidBuilderCI.Build
+          androidExportType: androidPackage
+
+      - name: Rename APK
+        run: |
+          mv Builds/Android/TouchTable.apk \
+             "TouchTable-${{ github.ref_name }}.apk"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: TouchTable-${{ github.ref_name }}.apk
+
+  # ── GitHub Release ────────────────────────────────────────────────────────────
+  release:
+    name: Publish GitHub Release
+    needs: [build-linux, build-windows, build-android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to create releases and upload assets
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: List release assets
+        run: ls -lh release-assets/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name:                 "TouchTable ${{ github.ref_name }}"
+          # Tags containing a hyphen (e.g. v1.0.0-beta) are marked pre-release.
+          prerelease:           ${{ contains(github.ref_name, '-') }}
+          draft:                false
+          generate_release_notes: true
+          files: |
+            release-assets/TouchTable-Linux-x64-${{ github.ref_name }}.zip
+            release-assets/TouchTable-Windows-x64-${{ github.ref_name }}.zip
+            release-assets/TouchTable-${{ github.ref_name }}.apk

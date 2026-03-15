@@ -1,0 +1,143 @@
+# CI Build Workflow
+# Triggered on every push / PR to main or develop.
+# Builds PC (Linux x64, Windows x64) and Android in parallel,
+# then uploads the resulting binaries as workflow artifacts (kept 14 days).
+#
+# Required repository secrets (Settings → Secrets → Actions):
+#   UNITY_LICENSE  — contents of your .ulf personal-license file, OR
+#   UNITY_EMAIL + UNITY_PASSWORD — Unity ID credentials (used by game-ci
+#                                  to activate a floating license)
+#
+# The game-ci/unity-builder action runs Unity inside a Docker container.
+# Build outputs are written inside the mounted workspace and then uploaded.
+# See: https://game.ci/docs/github/builder
+
+name: Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  UNITY_VERSION: 6000.3.11f1
+
+# Cancel in-flight runs on the same branch so only the latest commit builds.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── PC: Linux x64 ────────────────────────────────────────────────────────────
+  build-linux:
+    name: PC — Linux x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Linux-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Linux-
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_TARGET:        Linux64
+          # Path inside the Docker container (/github/workspace == $GITHUB_WORKSPACE on host)
+          BUILD_OUTPUT_PATH:   /github/workspace/Builds/Linux/TouchTable
+        with:
+          unityVersion:   ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneLinux64
+          buildMethod:    PCBuilderCI.Build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name:            TouchTable-Linux-x64
+          path:            Builds/Linux/
+          retention-days:  14
+
+  # ── PC: Windows x64 ──────────────────────────────────────────────────────────
+  build-windows:
+    name: PC — Windows x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Windows-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Windows-
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_TARGET:        Windows64
+          BUILD_OUTPUT_PATH:   /github/workspace/Builds/Windows/TouchTable.exe
+        with:
+          unityVersion:   ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneWindows64
+          buildMethod:    PCBuilderCI.Build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name:            TouchTable-Windows-x64
+          path:            Builds/Windows/
+          retention-days:  14
+
+  # ── Mobile: Android APK ───────────────────────────────────────────────────────
+  build-android:
+    name: Mobile — Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Android-
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_OUTPUT_PATH: /github/workspace/Builds/Android/TouchTable.apk
+        with:
+          unityVersion:      ${{ env.UNITY_VERSION }}
+          targetPlatform:    Android
+          buildMethod:       AndroidBuilderCI.Build
+          # Export as a self-contained APK (not an AAB/Gradle project)
+          androidExportType: androidPackage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name:            TouchTable-Android-APK
+          path:            Builds/Android/TouchTable.apk
+          retention-days:  14
