@@ -68,52 +68,29 @@ public static class SceneBuilder
 
         GameObject canvasGo = CreateCanvas();
         Transform canvas = canvasGo.transform;
-
-        // SceneLoader lives on the canvas root
         SceneLoader sceneLoader = canvasGo.AddComponent<SceneLoader>();
 
-        // Title
-        CreateText(canvas, "Title", "Touch Table Demo",
-            anchoredPos: new Vector2(0f, 650f),
-            sizeDelta: new Vector2(900f, 120f),
-            fontSize: 52,
-            style: FontStyle.Bold);
+        // Title — top-center
+        GameObject title = CreateText(canvas, "Title", "Touch Table Demo", 48, FontStyle.Bold);
+        AnchorTopCenter(title, 700f, 90f, 60f);
 
-        // TouchPop button
-        GameObject btn1 = CreateButton(canvas, "TouchPopButton", "Touch Pop (Whack-a-Mole)",
-            anchoredPos: new Vector2(0f, 400f),
-            sizeDelta: new Vector2(700f, 110f));
-        UnityEventTools.AddStringPersistentListener(
-            btn1.GetComponent<Button>().onClick,
-            sceneLoader.LoadSceneByName,
-            "TouchPop");
+        // Three scene buttons — centered on screen, stacked
+        GameObject btn1 = CreateButton(canvas, "TouchPopButton", "Touch Pop (Whack-a-Mole)", new Color(0.2f, 0.5f, 0.8f));
+        AnchorCenter(btn1, 700f, 110f, 0f, 120f);
+        UnityEventTools.AddStringPersistentListener(btn1.GetComponent<Button>().onClick, sceneLoader.LoadSceneByName, "TouchPop");
 
-        // ScrollableText button
-        GameObject btn2 = CreateButton(canvas, "ScrollableTextButton", "Scrollable Text",
-            anchoredPos: new Vector2(0f, 240f),
-            sizeDelta: new Vector2(700f, 110f));
-        UnityEventTools.AddStringPersistentListener(
-            btn2.GetComponent<Button>().onClick,
-            sceneLoader.LoadSceneByName,
-            "ScrollableText");
+        GameObject btn2 = CreateButton(canvas, "ScrollableTextButton", "Scrollable Text", new Color(0.2f, 0.5f, 0.8f));
+        AnchorCenter(btn2, 700f, 110f, 0f, -20f);
+        UnityEventTools.AddStringPersistentListener(btn2.GetComponent<Button>().onClick, sceneLoader.LoadSceneByName, "ScrollableText");
 
-        // BackgroundBlend button
-        GameObject btn3 = CreateButton(canvas, "BackgroundBlendButton", "Background Blend",
-            anchoredPos: new Vector2(0f, 80f),
-            sizeDelta: new Vector2(700f, 110f));
-        UnityEventTools.AddStringPersistentListener(
-            btn3.GetComponent<Button>().onClick,
-            sceneLoader.LoadSceneByName,
-            "BackgroundBlend");
+        GameObject btn3 = CreateButton(canvas, "BackgroundBlendButton", "Background Blend", new Color(0.2f, 0.5f, 0.8f));
+        AnchorCenter(btn3, 700f, 110f, 0f, -160f);
+        UnityEventTools.AddStringPersistentListener(btn3.GetComponent<Button>().onClick, sceneLoader.LoadSceneByName, "BackgroundBlend");
 
-        // Quit button
-        GameObject quitBtn = CreateButton(canvas, "QuitButton", "Quit",
-            anchoredPos: new Vector2(0f, -100f),
-            sizeDelta: new Vector2(400f, 90f),
-            normalColor: new Color(0.7f, 0.2f, 0.2f));
-        UnityEventTools.AddVoidPersistentListener(
-            quitBtn.GetComponent<Button>().onClick,
-            sceneLoader.Quit);
+        // Quit — bottom-center
+        GameObject quitBtn = CreateButton(canvas, "QuitButton", "Quit", new Color(0.7f, 0.2f, 0.2f));
+        AnchorBottomCenter(quitBtn, 300f, 80f, 40f);
+        UnityEventTools.AddVoidPersistentListener(quitBtn.GetComponent<Button>().onClick, sceneLoader.Quit);
 
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/MainMenu.unity");
     }
@@ -131,33 +108,22 @@ public static class SceneBuilder
 
         GameObject canvasGo = CreateCanvas();
         Transform canvas = canvasGo.transform;
-
         SceneLoader sceneLoader = canvasGo.AddComponent<SceneLoader>();
 
-        // Score label — top center
-        GameObject scoreTextGo = CreateText(canvas, "ScoreText", "Score: 0",
-            anchoredPos: new Vector2(0f, 870f),
-            sizeDelta: new Vector2(600f, 80f),
-            fontSize: 36,
-            style: FontStyle.Bold);
+        // Score label — top-center
+        GameObject scoreTextGo = CreateText(canvas, "ScoreText", "Score: 0", 36, FontStyle.Bold);
+        AnchorTopCenter(scoreTextGo, 400f, 70f, 15f);
         Text scoreText = scoreTextGo.GetComponent<Text>();
 
-        // Back button — top left corner
-        GameObject backBtn = CreateButton(canvas, "BackButton", "< Back",
-            anchoredPos: new Vector2(-440f, 870f),
-            sizeDelta: new Vector2(180f, 70f),
-            normalColor: new Color(0.2f, 0.2f, 0.5f));
-        UnityEventTools.AddStringPersistentListener(
-            backBtn.GetComponent<Button>().onClick,
-            sceneLoader.LoadSceneByName,
-            "MainMenu");
+        // Back button — top-left
+        GameObject backBtn = CreateButton(canvas, "BackButton", "< Back", new Color(0.2f, 0.2f, 0.5f));
+        AnchorTopLeft(backBtn, 160f, 60f, 15f);
+        UnityEventTools.AddStringPersistentListener(backBtn.GetComponent<Button>().onClick, sceneLoader.LoadSceneByName, "MainMenu");
 
         // TouchPopManager
         GameObject managerGo = new GameObject("TouchPopManager");
         TouchPopManager manager = managerGo.AddComponent<TouchPopManager>();
-
-        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Target.prefab");
-        manager.targetPrefab = prefab;
+        manager.targetPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Target.prefab");
         manager.spawnArea = new Rect(-4f, -3f, 8f, 6f);
         manager.spawnIntervalMin = 0.5f;
         manager.spawnIntervalMax = 1.25f;
@@ -181,49 +147,93 @@ public static class SceneBuilder
 
         GameObject canvasGo = CreateCanvas();
         Transform canvas = canvasGo.transform;
-
         SceneLoader sceneLoader = canvasGo.AddComponent<SceneLoader>();
         ScrollableTextController controller = canvasGo.AddComponent<ScrollableTextController>();
 
-        // Header label
-        CreateText(canvas, "Header", "Scrollable Text Demo",
-            anchoredPos: new Vector2(0f, 800f),
-            sizeDelta: new Vector2(800f, 100f),
-            fontSize: 42,
-            style: FontStyle.Bold);
+        // Header — top-center
+        GameObject header = CreateText(canvas, "Header", "Scrollable Text Demo", 42, FontStyle.Bold);
+        AnchorTopCenter(header, 700f, 80f, 20f);
 
-        // Back button
-        GameObject backBtn = CreateButton(canvas, "BackButton", "< Back",
-            anchoredPos: new Vector2(-440f, 870f),
-            sizeDelta: new Vector2(180f, 70f),
-            normalColor: new Color(0.2f, 0.2f, 0.5f));
-        UnityEventTools.AddStringPersistentListener(
-            backBtn.GetComponent<Button>().onClick,
-            sceneLoader.LoadSceneByName,
-            "MainMenu");
+        // Back button — top-left
+        GameObject backBtn = CreateButton(canvas, "BackButton", "< Back", new Color(0.2f, 0.2f, 0.5f));
+        AnchorTopLeft(backBtn, 160f, 60f, 15f);
+        UnityEventTools.AddStringPersistentListener(backBtn.GetComponent<Button>().onClick, sceneLoader.LoadSceneByName, "MainMenu");
 
-        // Open Popup button
-        GameObject openBtn = CreateButton(canvas, "OpenButton", "Open Info Panel",
-            anchoredPos: new Vector2(0f, 600f),
-            sizeDelta: new Vector2(600f, 100f));
-        UnityEventTools.AddVoidPersistentListener(
-            openBtn.GetComponent<Button>().onClick,
-            controller.OpenPopup);
+        // Open Popup button — centered
+        GameObject openBtn = CreateButton(canvas, "OpenButton", "Open Info Panel", new Color(0.2f, 0.5f, 0.8f));
+        AnchorCenter(openBtn, 500f, 100f, 0f, 0f);
+        UnityEventTools.AddVoidPersistentListener(openBtn.GetComponent<Button>().onClick, controller.OpenPopup);
 
-        // Popup Panel (full-screen overlay, starts hidden)
+        // Popup Panel — full screen overlay
         GameObject popupPanel = CreatePopupPanel(canvas, out ScrollRect scrollRect, out Text contentText);
-
-        // Close button (wired inside CreatePopupPanel, but we need the controller ref)
         Button closeBtn = popupPanel.transform.Find("CloseButton").GetComponent<Button>();
         UnityEventTools.AddVoidPersistentListener(closeBtn.onClick, controller.ClosePopup);
 
-        // Assign ScrollableTextController fields
         controller.popupPanel = popupPanel;
         controller.scrollRect = scrollRect;
         controller.contentText = contentText;
         controller.longText = SampleLongText();
 
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/ScrollableText.unity");
+    }
+
+    // -------------------------------------------------------------------------
+    // BackgroundBlend Scene
+    // -------------------------------------------------------------------------
+
+    private static void CreateBackgroundBlendScene()
+    {
+        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+        CreateCamera(new Color(0f, 0f, 0f));
+        CreateEventSystem();
+
+        GameObject canvasGo = CreateCanvas();
+        Transform canvas = canvasGo.transform;
+        SceneLoader sceneLoader = canvasGo.AddComponent<SceneLoader>();
+        BackgroundBlendController controller = canvasGo.AddComponent<BackgroundBlendController>();
+
+        // 4 background images — stretch-fill the canvas, stacked in order
+        string[] spriteNames = { "Background_Morning", "Background_Afternoon", "Background_Evening", "Background_Night" };
+        string[] timeLabels  = { "Morning", "Afternoon", "Evening", "Night" };
+        Image[] bgImages = new Image[spriteNames.Length];
+
+        for (int i = 0; i < spriteNames.Length; i++)
+        {
+            Sprite spr = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Sprites/{spriteNames[i]}.png");
+            GameObject bgGo = new GameObject(spriteNames[i]);
+            bgGo.transform.SetParent(canvas, false);
+            AnchorStretchFill(bgGo);
+            Image img = bgGo.AddComponent<Image>();
+            img.preserveAspect = false;
+            if (spr != null) img.sprite = spr;
+            Color c = Color.white;
+            c.a = (i == 0) ? 1f : 0f;
+            img.color = c;
+            bgImages[i] = img;
+        }
+
+        // Time-of-day label — above slider, bottom-center
+        GameObject labelGo = CreateText(canvas, "TimeOfDayLabel", "Morning", 38, FontStyle.Bold);
+        AnchorBottomCenter(labelGo, 500f, 60f, 110f);
+        Text timeLabel = labelGo.GetComponent<Text>();
+
+        // Slider — bottom-stretch
+        GameObject sliderGo = CreateSliderGo(canvas, "TimeOfDaySlider");
+        AnchorBottomStretch(sliderGo, 70f, 30f);
+        Slider slider = sliderGo.GetComponent<Slider>();
+
+        // Back button — top-left (rendered on top of backgrounds)
+        GameObject backBtn = CreateButton(canvas, "BackButton", "< Back", new Color(0.15f, 0.15f, 0.4f));
+        AnchorTopLeft(backBtn, 160f, 60f, 15f);
+        UnityEventTools.AddStringPersistentListener(backBtn.GetComponent<Button>().onClick, sceneLoader.LoadSceneByName, "MainMenu");
+
+        controller.backgroundImages = bgImages;
+        controller.timeOfDaySlider   = slider;
+        controller.timeOfDayLabel    = timeLabel;
+        controller.labels            = timeLabels;
+
+        EditorSceneManager.SaveScene(scene, "Assets/Scenes/BackgroundBlend.unity");
     }
 
     // -------------------------------------------------------------------------
@@ -242,7 +252,7 @@ public static class SceneBuilder
     }
 
     // -------------------------------------------------------------------------
-    // Helpers: Scene Objects
+    // Scene-level helpers
     // -------------------------------------------------------------------------
 
     private static GameObject CreateCamera(Color background)
@@ -282,22 +292,16 @@ public static class SceneBuilder
     }
 
     // -------------------------------------------------------------------------
-    // Helpers: UI Widgets
+    // Widget factories (return GameObject, caller sets anchor via helpers below)
     // -------------------------------------------------------------------------
 
     private static GameObject CreateText(Transform parent, string name, string content,
-        Vector2 anchoredPos, Vector2 sizeDelta, int fontSize = 30,
-        FontStyle style = FontStyle.Normal, TextAnchor alignment = TextAnchor.MiddleCenter)
+        int fontSize = 30, FontStyle style = FontStyle.Normal,
+        TextAnchor alignment = TextAnchor.MiddleCenter)
     {
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
-
-        RectTransform rt = go.AddComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = anchoredPos;
-        rt.sizeDelta = sizeDelta;
-
+        go.AddComponent<RectTransform>();
         Text text = go.AddComponent<Text>();
         text.text = content;
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -308,104 +312,147 @@ public static class SceneBuilder
         return go;
     }
 
-    private static GameObject CreateButton(Transform parent, string name, string label,
-        Vector2 anchoredPos, Vector2 sizeDelta, Color? normalColor = null)
+    private static GameObject CreateButton(Transform parent, string name, string label, Color color)
     {
-        // Button root
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
-
-        RectTransform rt = go.AddComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = anchoredPos;
-        rt.sizeDelta = sizeDelta;
+        go.AddComponent<RectTransform>();
 
         Image img = go.AddComponent<Image>();
-        img.color = normalColor ?? new Color(0.2f, 0.5f, 0.8f);
+        img.color = color;
 
         Button btn = go.AddComponent<Button>();
-        ColorBlock colors = btn.colors;
-        colors.normalColor = normalColor ?? new Color(0.2f, 0.5f, 0.8f);
-        colors.highlightedColor = (normalColor ?? new Color(0.2f, 0.5f, 0.8f)) * 1.2f;
-        colors.pressedColor = (normalColor ?? new Color(0.2f, 0.5f, 0.8f)) * 0.8f;
-        btn.colors = colors;
+        ColorBlock cb = btn.colors;
+        cb.normalColor      = color;
+        cb.highlightedColor = color * 1.25f;
+        cb.pressedColor     = color * 0.75f;
+        btn.colors = cb;
         btn.targetGraphic = img;
 
-        // Label child
+        // Label child — fills the button
         GameObject labelGo = new GameObject("Label");
         labelGo.transform.SetParent(go.transform, false);
-
         RectTransform lrt = labelGo.AddComponent<RectTransform>();
         lrt.anchorMin = Vector2.zero;
         lrt.anchorMax = Vector2.one;
         lrt.offsetMin = lrt.offsetMax = Vector2.zero;
-
         Text text = labelGo.AddComponent<Text>();
         text.text = label;
         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = Mathf.RoundToInt(sizeDelta.y * 0.38f);
+        text.fontSize = 30;
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
 
         return go;
     }
 
-    /// <summary>
-    /// Creates the full popup panel hierarchy with ScrollRect and content text.
-    /// Returns the panel root; scrollRect and contentText are set as out params.
-    /// </summary>
+    // -------------------------------------------------------------------------
+    // Anchor helpers — call after CreateText / CreateButton to position them
+    // -------------------------------------------------------------------------
+
+    /// <summary>Top-left corner, fixed size.</summary>
+    private static void AnchorTopLeft(GameObject go, float w, float h, float margin)
+    {
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        rt.sizeDelta = new Vector2(w, h);
+        rt.anchoredPosition = new Vector2(margin, -margin);
+    }
+
+    /// <summary>Top-center, fixed size, offset down from top edge.</summary>
+    private static void AnchorTopCenter(GameObject go, float w, float h, float marginTop)
+    {
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.sizeDelta = new Vector2(w, h);
+        rt.anchoredPosition = new Vector2(0f, -marginTop);
+    }
+
+    /// <summary>Center of screen, offset by (dx, dy).</summary>
+    private static void AnchorCenter(GameObject go, float w, float h, float dx, float dy)
+    {
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(w, h);
+        rt.anchoredPosition = new Vector2(dx, dy);
+    }
+
+    /// <summary>Bottom-center, fixed size, offset up from bottom edge.</summary>
+    private static void AnchorBottomCenter(GameObject go, float w, float h, float marginBottom)
+    {
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+        rt.pivot = new Vector2(0.5f, 0f);
+        rt.sizeDelta = new Vector2(w, h);
+        rt.anchoredPosition = new Vector2(0f, marginBottom);
+    }
+
+    /// <summary>Bottom edge, full width stretch, fixed height.</summary>
+    private static void AnchorBottomStretch(GameObject go, float h, float margin)
+    {
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(1f, 0f);
+        rt.pivot = new Vector2(0.5f, 0f);
+        rt.anchoredPosition = new Vector2(0f, margin);
+        rt.sizeDelta = new Vector2(-60f, h);  // 30px padding each side
+    }
+
+    /// <summary>Full stretch fill — covers the entire parent.</summary>
+    private static void AnchorStretchFill(GameObject go)
+    {
+        RectTransform rt = go.GetComponent<RectTransform>();
+        if (rt == null) rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+    }
+
+    // -------------------------------------------------------------------------
+    // Popup panel for ScrollableText
+    // -------------------------------------------------------------------------
+
     private static GameObject CreatePopupPanel(Transform canvas,
         out ScrollRect scrollRect, out Text contentText)
     {
-        // Panel root — full screen
+        // Panel — full stretch with small inset
         GameObject panel = new GameObject("PopupPanel");
         panel.transform.SetParent(canvas, false);
-
         RectTransform panelRt = panel.AddComponent<RectTransform>();
         panelRt.anchorMin = Vector2.zero;
         panelRt.anchorMax = Vector2.one;
-        panelRt.offsetMin = new Vector2(40f, 40f);
-        panelRt.offsetMax = new Vector2(-40f, -40f);
+        panelRt.offsetMin = new Vector2(20f, 20f);
+        panelRt.offsetMax = new Vector2(-20f, -20f);
+        panel.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.97f);
 
-        Image panelImg = panel.AddComponent<Image>();
-        panelImg.color = new Color(0.05f, 0.05f, 0.1f, 0.97f);
-
-        // Close button — top right of panel
-        GameObject closeBtn = CreateButton(panel.transform, "CloseButton", "X",
-            anchoredPos: new Vector2(0f, 0f),
-            sizeDelta: new Vector2(90f, 90f),
-            normalColor: new Color(0.6f, 0.15f, 0.15f));
+        // Close button — top-right of panel
+        GameObject closeBtn = CreateButton(panel.transform, "CloseButton", "X", new Color(0.6f, 0.15f, 0.15f));
         RectTransform closeBtnRt = closeBtn.GetComponent<RectTransform>();
         closeBtnRt.anchorMin = closeBtnRt.anchorMax = new Vector2(1f, 1f);
         closeBtnRt.pivot = new Vector2(1f, 1f);
+        closeBtnRt.sizeDelta = new Vector2(80f, 80f);
         closeBtnRt.anchoredPosition = new Vector2(-10f, -10f);
 
         // Panel title
-        GameObject titleGo = new GameObject("PanelTitle");
-        titleGo.transform.SetParent(panel.transform, false);
-        RectTransform titleRt = titleGo.AddComponent<RectTransform>();
+        GameObject titleGo = CreateText(panel.transform, "PanelTitle", "Information", 34, FontStyle.Bold);
+        RectTransform titleRt = titleGo.GetComponent<RectTransform>();
         titleRt.anchorMin = new Vector2(0f, 1f);
         titleRt.anchorMax = new Vector2(1f, 1f);
         titleRt.pivot = new Vector2(0.5f, 1f);
+        titleRt.sizeDelta = new Vector2(0f, 70f);
         titleRt.anchoredPosition = new Vector2(0f, -10f);
-        titleRt.sizeDelta = new Vector2(0f, 80f);
-        Text titleText = titleGo.AddComponent<Text>();
-        titleText.text = "Information";
-        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        titleText.fontSize = 36;
-        titleText.fontStyle = FontStyle.Bold;
-        titleText.alignment = TextAnchor.MiddleCenter;
-        titleText.color = Color.white;
 
-        // ScrollView
+        // ScrollView — fills panel below title
         GameObject scrollGo = new GameObject("ScrollView");
         scrollGo.transform.SetParent(panel.transform, false);
         RectTransform scrollRt = scrollGo.AddComponent<RectTransform>();
-        scrollRt.anchorMin = new Vector2(0f, 0f);
-        scrollRt.anchorMax = new Vector2(1f, 1f);
+        scrollRt.anchorMin = Vector2.zero;
+        scrollRt.anchorMax = Vector2.one;
         scrollRt.offsetMin = new Vector2(10f, 10f);
-        scrollRt.offsetMax = new Vector2(-10f, -100f);   // leave room for title
+        scrollRt.offsetMax = new Vector2(-10f, -90f);
 
         scrollRect = scrollGo.AddComponent<ScrollRect>();
         scrollRect.horizontal = false;
@@ -420,7 +467,6 @@ public static class SceneBuilder
         viewportRt.offsetMin = viewportRt.offsetMax = Vector2.zero;
         viewportGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
         viewportGo.AddComponent<Mask>().showMaskGraphic = false;
-
         scrollRect.viewport = viewportRt;
 
         // Content
@@ -432,20 +478,17 @@ public static class SceneBuilder
         contentRt.pivot = new Vector2(0.5f, 1f);
         contentRt.anchoredPosition = Vector2.zero;
         contentRt.sizeDelta = new Vector2(0f, 0f);
-
         ContentSizeFitter csf = contentGo.AddComponent<ContentSizeFitter>();
         csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
         VerticalLayoutGroup vlg = contentGo.AddComponent<VerticalLayoutGroup>();
         vlg.padding = new RectOffset(20, 20, 10, 10);
         vlg.childControlWidth = true;
         vlg.childControlHeight = true;
         vlg.childForceExpandWidth = true;
         vlg.childForceExpandHeight = false;
-
         scrollRect.content = contentRt;
 
-        // Content Text
+        // Content text
         GameObject textGo = new GameObject("ContentText");
         textGo.transform.SetParent(contentGo.transform, false);
         contentText = textGo.AddComponent<Text>();
@@ -455,110 +498,20 @@ public static class SceneBuilder
         contentText.horizontalOverflow = HorizontalWrapMode.Wrap;
         contentText.verticalOverflow = VerticalWrapMode.Overflow;
         contentText.alignment = TextAnchor.UpperLeft;
-
-        LayoutElement le = textGo.AddComponent<LayoutElement>();
-        le.flexibleWidth = 1f;
+        textGo.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
         return panel;
     }
 
     // -------------------------------------------------------------------------
-    // BackgroundBlend Scene
+    // Slider for BackgroundBlend
     // -------------------------------------------------------------------------
 
-    private static void CreateBackgroundBlendScene()
+    private static GameObject CreateSliderGo(Transform parent, string name)
     {
-        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-
-        CreateCamera(new Color(0f, 0f, 0f));
-        CreateEventSystem();
-
-        GameObject canvasGo = CreateCanvas();
-        Transform canvas = canvasGo.transform;
-
-        SceneLoader sceneLoader = canvasGo.AddComponent<SceneLoader>();
-        BackgroundBlendController controller = canvasGo.AddComponent<BackgroundBlendController>();
-
-        // 4 background images — stacked full-screen, drawn in order (Morning at bottom)
-        string[] spriteNames = { "Background_Morning", "Background_Afternoon", "Background_Evening", "Background_Night" };
-        string[] timeLabels  = { "Morning", "Afternoon", "Evening", "Night" };
-        Image[] bgImages = new Image[spriteNames.Length];
-
-        for (int i = 0; i < spriteNames.Length; i++)
-        {
-            Sprite spr = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Sprites/{spriteNames[i]}.png");
-
-            GameObject bgGo = new GameObject(spriteNames[i]);
-            bgGo.transform.SetParent(canvas, false);
-
-            RectTransform rt = bgGo.AddComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-
-            Image img = bgGo.AddComponent<Image>();
-            img.preserveAspect = false;
-            if (spr != null)
-                img.sprite = spr;
-
-            // All start fully transparent except Morning (index 0)
-            Color c = Color.white;
-            c.a = (i == 0) ? 1f : 0f;
-            img.color = c;
-
-            bgImages[i] = img;
-        }
-
-        // Time-of-day label — top center, above the slider
-        GameObject labelGo = CreateText(canvas, "TimeOfDayLabel", "Morning",
-            anchoredPos: new Vector2(0f, -750f),
-            sizeDelta: new Vector2(600f, 80f),
-            fontSize: 40,
-            style: FontStyle.Bold);
-        Text timeLabel = labelGo.GetComponent<Text>();
-
-        // Horizontal slider — near bottom of screen
-        Slider slider = CreateSlider(canvas, "TimeOfDaySlider",
-            anchoredPos: new Vector2(0f, -860f),
-            sizeDelta: new Vector2(900f, 80f));
-
-        // Back button — top left
-        GameObject backBtn = CreateButton(canvas, "BackButton", "< Back",
-            anchoredPos: new Vector2(-440f, 870f),
-            sizeDelta: new Vector2(180f, 70f),
-            normalColor: new Color(0.2f, 0.2f, 0.5f));
-        UnityEventTools.AddStringPersistentListener(
-            backBtn.GetComponent<Button>().onClick,
-            sceneLoader.LoadSceneByName,
-            "MainMenu");
-
-        // Wire controller
-        controller.backgroundImages = bgImages;
-        controller.timeOfDaySlider   = slider;
-        controller.timeOfDayLabel    = timeLabel;
-        controller.labels            = timeLabels;
-
-        EditorSceneManager.SaveScene(scene, "Assets/Scenes/BackgroundBlend.unity");
-    }
-
-    // -------------------------------------------------------------------------
-    // Helper: Slider
-    // -------------------------------------------------------------------------
-
-    /// <summary>
-    /// Creates a horizontal UI Slider with Background, Fill, and Handle children.
-    /// </summary>
-    private static Slider CreateSlider(Transform parent, string name,
-        Vector2 anchoredPos, Vector2 sizeDelta)
-    {
-        // Root
         GameObject root = new GameObject(name);
         root.transform.SetParent(parent, false);
-        RectTransform rootRt = root.AddComponent<RectTransform>();
-        rootRt.anchorMin = rootRt.anchorMax = new Vector2(0.5f, 0.5f);
-        rootRt.pivot = new Vector2(0.5f, 0.5f);
-        rootRt.anchoredPosition = anchoredPos;
-        rootRt.sizeDelta = sizeDelta;
+        root.AddComponent<RectTransform>();
 
         Slider slider = root.AddComponent<Slider>();
         slider.minValue = 0f;
@@ -566,7 +519,7 @@ public static class SceneBuilder
         slider.value = 0f;
         slider.direction = Slider.Direction.LeftToRight;
 
-        // Background
+        // Background track
         GameObject bg = new GameObject("Background");
         bg.transform.SetParent(root.transform, false);
         RectTransform bgRt = bg.AddComponent<RectTransform>();
@@ -574,10 +527,10 @@ public static class SceneBuilder
         bgRt.anchorMax = new Vector2(1f, 0.75f);
         bgRt.offsetMin = bgRt.offsetMax = Vector2.zero;
         Image bgImg = bg.AddComponent<Image>();
-        bgImg.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+        bgImg.color = new Color(0.15f, 0.15f, 0.15f, 0.9f);
         slider.image = bgImg;
 
-        // Fill Area
+        // Fill area
         GameObject fillArea = new GameObject("Fill Area");
         fillArea.transform.SetParent(root.transform, false);
         RectTransform faRt = fillArea.AddComponent<RectTransform>();
@@ -596,12 +549,12 @@ public static class SceneBuilder
         fillImg.color = new Color(0.9f, 0.7f, 0.2f);
         slider.fillRect = fillRt;
 
-        // Handle Slide Area
+        // Handle slide area
         GameObject handleArea = new GameObject("Handle Slide Area");
         handleArea.transform.SetParent(root.transform, false);
         RectTransform haRt = handleArea.AddComponent<RectTransform>();
-        haRt.anchorMin = new Vector2(0f, 0f);
-        haRt.anchorMax = new Vector2(1f, 1f);
+        haRt.anchorMin = Vector2.zero;
+        haRt.anchorMax = Vector2.one;
         haRt.offsetMin = new Vector2(10f, 0f);
         haRt.offsetMax = new Vector2(-10f, 0f);
 
@@ -609,17 +562,17 @@ public static class SceneBuilder
         handle.transform.SetParent(handleArea.transform, false);
         RectTransform handleRt = handle.AddComponent<RectTransform>();
         handleRt.anchorMin = handleRt.anchorMax = new Vector2(0f, 0.5f);
-        handleRt.sizeDelta = new Vector2(60f, 60f);
+        handleRt.sizeDelta = new Vector2(70f, 70f);
         Image handleImg = handle.AddComponent<Image>();
         handleImg.color = Color.white;
         slider.handleRect = handleRt;
         slider.targetGraphic = handleImg;
 
-        return slider;
+        return root;
     }
 
     // -------------------------------------------------------------------------
-    // Sample text for ScrollableText scene
+    // Sample text
     // -------------------------------------------------------------------------
 
     private static string SampleLongText()

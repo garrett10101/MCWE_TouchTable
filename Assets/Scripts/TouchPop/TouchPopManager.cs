@@ -67,6 +67,7 @@ public class TouchPopManager : MonoBehaviour
             SpawnedTarget t = activeTargets[i];
             if (time - t.spawnTime >= targetLifetime)
             {
+                Debug.Log($"[TouchPop] Target expired at {t.gameObject.transform.position}");
                 Destroy(t.gameObject);
                 activeTargets.RemoveAt(i);
             }
@@ -138,6 +139,7 @@ public class TouchPopManager : MonoBehaviour
         }
         touchComponent.Initialize(this);
         activeTargets.Add(new SpawnedTarget { gameObject = obj, spawnTime = Time.time });
+        Debug.Log($"[TouchPop] Target spawned at ({x:F2}, {y:F2}) — active: {activeTargets.Count}");
     }
 
     /// <summary>
@@ -155,6 +157,7 @@ public class TouchPopManager : MonoBehaviour
                 break;
             }
         }
+        Debug.Log($"[TouchPop] Target HIT at {target.gameObject.transform.position} — score: {score + 1}");
         Destroy(target.gameObject);
         score++;
         UpdateScoreText();
