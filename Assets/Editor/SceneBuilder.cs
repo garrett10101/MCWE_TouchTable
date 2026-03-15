@@ -467,16 +467,17 @@ public static class SceneBuilder
         scrollRect.horizontal = false;
         scrollRect.vertical = true;
 
-        // Viewport
+        // Viewport — leave room on right for scrollbar (40px)
         GameObject viewportGo = new GameObject("Viewport");
         viewportGo.transform.SetParent(scrollGo.transform, false);
         RectTransform viewportRt = viewportGo.AddComponent<RectTransform>();
         viewportRt.anchorMin = Vector2.zero;
         viewportRt.anchorMax = Vector2.one;
-        viewportRt.offsetMin = viewportRt.offsetMax = Vector2.zero;
+        viewportRt.offsetMin = Vector2.zero;
+        viewportRt.offsetMax = new Vector2(-40f, 0f);
         Image viewportImg = viewportGo.AddComponent<Image>();
         viewportImg.color = Color.white; // Must be opaque — Mask uses alpha to define clip area
-        viewportImg.raycastTarget = false;
+        viewportImg.raycastTarget = true; // Must be true so ScrollRect receives mouse wheel + touch drag
         viewportGo.AddComponent<Mask>().showMaskGraphic = false;
         scrollRect.viewport = viewportRt;
 
@@ -507,6 +508,44 @@ public static class SceneBuilder
         contentText.verticalOverflow = VerticalWrapMode.Overflow;
         contentText.alignment = TextAnchor.UpperLeft;
         contentText.raycastTarget = false;
+
+        // Vertical scrollbar — anchored to right edge of scroll view
+        GameObject scrollbarGo = new GameObject("Scrollbar");
+        scrollbarGo.transform.SetParent(scrollGo.transform, false);
+        RectTransform scrollbarRt = scrollbarGo.AddComponent<RectTransform>();
+        scrollbarRt.anchorMin = new Vector2(1f, 0f);
+        scrollbarRt.anchorMax = new Vector2(1f, 1f);
+        scrollbarRt.pivot = new Vector2(1f, 1f);
+        scrollbarRt.offsetMin = Vector2.zero;
+        scrollbarRt.offsetMax = Vector2.zero;
+        scrollbarRt.sizeDelta = new Vector2(40f, 0f);
+        Image scrollbarBg = scrollbarGo.AddComponent<Image>();
+        scrollbarBg.color = new Color(0.15f, 0.15f, 0.2f, 1f);
+        Scrollbar scrollbar = scrollbarGo.AddComponent<Scrollbar>();
+        scrollbar.direction = Scrollbar.Direction.BottomToTop;
+
+        // Scrollbar handle
+        GameObject handleArea = new GameObject("Sliding Area");
+        handleArea.transform.SetParent(scrollbarGo.transform, false);
+        RectTransform handleAreaRt = handleArea.AddComponent<RectTransform>();
+        handleAreaRt.anchorMin = Vector2.zero;
+        handleAreaRt.anchorMax = Vector2.one;
+        handleAreaRt.offsetMin = new Vector2(5f, 5f);
+        handleAreaRt.offsetMax = new Vector2(-5f, -5f);
+
+        GameObject handle = new GameObject("Handle");
+        handle.transform.SetParent(handleArea.transform, false);
+        RectTransform handleRt = handle.AddComponent<RectTransform>();
+        handleRt.anchorMin = Vector2.zero;
+        handleRt.anchorMax = Vector2.one;
+        handleRt.offsetMin = handleRt.offsetMax = Vector2.zero;
+        Image handleImg = handle.AddComponent<Image>();
+        handleImg.color = new Color(0.6f, 0.6f, 0.7f, 1f);
+        scrollbar.handleRect = handleRt;
+        scrollbar.targetGraphic = handleImg;
+
+        scrollRect.verticalScrollbar = scrollbar;
+        scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
 
         // Ensure CloseButton is the last sibling so it renders on top and receives input first
         closeBtn.transform.SetAsLastSibling();
