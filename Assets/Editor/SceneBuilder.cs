@@ -169,10 +169,14 @@ public static class SceneBuilder
         Button closeBtn = popupPanel.transform.Find("CloseButton").GetComponent<Button>();
         UnityEventTools.AddVoidPersistentListener(closeBtn.onClick, controller.ClosePopup);
 
+        // Bake text into scene so ContentSizeFitter can measure it on load
+        string longText = SampleLongText();
+        contentText.text = longText;
+
         controller.popupPanel = popupPanel;
         controller.scrollRect = scrollRect;
         controller.contentText = contentText;
-        controller.longText = SampleLongText();
+        controller.longText = longText;
 
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/ScrollableText.unity");
     }
@@ -465,7 +469,9 @@ public static class SceneBuilder
         viewportRt.anchorMin = Vector2.zero;
         viewportRt.anchorMax = Vector2.one;
         viewportRt.offsetMin = viewportRt.offsetMax = Vector2.zero;
-        viewportGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+        Image viewportImg = viewportGo.AddComponent<Image>();
+        viewportImg.color = new Color(0f, 0f, 0f, 0f);
+        viewportImg.raycastTarget = false;
         viewportGo.AddComponent<Mask>().showMaskGraphic = false;
         scrollRect.viewport = viewportRt;
 
@@ -578,15 +584,36 @@ public static class SceneBuilder
     private static string SampleLongText()
     {
         const string para =
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor " +
-            "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud " +
-            "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-            "dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
-            "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt " +
-            "mollit anim id est laborum.\n\n";
+            "Water is the foundation of all life on Earth, yet it is one of our most threatened " +
+            "natural resources. Freshwater makes up only about 3% of the Earth's total water supply, " +
+            "and of that, less than 1% is readily accessible for human use. As global populations " +
+            "grow and climate patterns shift, the demand for clean water is increasing while " +
+            "availability in many regions is declining. Glaciers that feed major river systems are " +
+            "retreating, groundwater aquifers are being drawn down faster than they can recharge, " +
+            "and droughts are becoming more frequent and severe in many parts of the world.\n\n" +
+            "Conserving water at the individual level is one of the most impactful actions a person " +
+            "can take. Simple changes — fixing leaky faucets, taking shorter showers, running " +
+            "dishwashers and washing machines only when full, and choosing drought-resistant plants " +
+            "in gardens — can collectively save millions of gallons each year. In agriculture, which " +
+            "accounts for roughly 70% of global freshwater withdrawals, adopting drip irrigation, " +
+            "crop rotation, and soil moisture monitoring can dramatically reduce waste while " +
+            "maintaining or even improving yields.\n\n" +
+            "Protecting watersheds and natural water systems is equally critical. Forests, wetlands, " +
+            "and grasslands act as natural sponges, absorbing rainfall and slowly releasing it into " +
+            "streams and aquifers. When these ecosystems are cleared or degraded, runoff increases, " +
+            "flooding becomes more severe, and groundwater recharge rates fall. Investing in the " +
+            "restoration of these landscapes is one of the most cost-effective strategies for " +
+            "securing long-term water supplies for both people and wildlife.\n\n" +
+            "Policy and technology also play essential roles. Smart metering systems help utilities " +
+            "and consumers identify leaks and track usage in real time. Desalination and water " +
+            "recycling technologies are becoming more efficient and affordable, expanding the range " +
+            "of water sources available to communities under stress. Meanwhile, international " +
+            "agreements and transboundary water management frameworks are essential for rivers and " +
+            "aquifers that cross national borders, where cooperation or conflict over water can " +
+            "shape geopolitical stability for decades to come.\n\n";
 
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < 6; i++)
             sb.Append(para);
         return sb.ToString().TrimEnd();
     }

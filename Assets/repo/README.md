@@ -1,6 +1,6 @@
 # Mobile Touch Test Project
 
-This repository contains the source files for a simple Unity 2D mobile interaction test.  The goal of this project is to demonstrate basic multi‑touch handling, UI scrolling, and slider‑driven blending between backgrounds.  It is organized into four scenes (not included as `.unity` files) and a handful of reusable scripts and sprites.
+This repository contains the source files for a simple Unity 2D mobile interaction test.  The goal of this project is to demonstrate basic multi‑touch handling, UI scrolling, and slider‑driven blending between backgrounds.  It is organized into four scenes and a handful of reusable scripts and sprites.
 
 ## Features
 
@@ -8,9 +8,9 @@ This repository contains the source files for a simple Unity 2D mobile interacti
 
 * **Touch Pop Test**: Implements a whack‑a‑mole style interaction where coloured targets spawn randomly and disappear when touched.  Supports simultaneous touches via the new Input System.  See `TouchPopManager.cs` and `TouchTarget.cs` for implementation details.
 
-* **Scrollable Text Test**: Demonstrates a scrollable text popup controlled by UI buttons.  The long body text can be configured in the inspector.  See `ScrollableTextController.cs`.
+* **Scrollable Text Test**: Demonstrates a scrollable text popup controlled by UI buttons.  See `ScrollableTextController.cs`.
 
-* **Background Slider Test**: Demonstrates blending between multiple backgrounds using a slider.  The nearest background is fully opaque while its neighbours fade in and out smoothly.  See `BackgroundBlendController.cs`.
+* **Background Slider Test**: Demonstrates blending between multiple backgrounds using a slider.  See `BackgroundBlendController.cs`.
 
 ## Assets
 
@@ -22,23 +22,121 @@ This repository contains the source files for a simple Unity 2D mobile interacti
 | Script | Purpose |
 | --- | --- |
 | `SceneLoader.cs` | Helper for loading scenes and quitting the application from UI buttons. |
-| `TouchPopManager.cs` | Spawns touch targets, handles multi‑touch input via raycasts, despawns expired targets and updates the score. |
+| `TouchPopManager.cs` | Spawns touch targets, handles multi‑touch input via overlap checks, despawns expired targets and updates the score. |
 | `TouchTarget.cs` | Lightweight component attached to each target so it knows which manager spawned it. |
-| `ScrollableTextController.cs` | Controls opening and closing of a popup panel containing a scrollable text.  Resets scroll position on open. |
+| `ScrollableTextController.cs` | Controls opening and closing of a popup panel containing scrollable text.  Resets scroll position on open. |
 | `BackgroundBlendController.cs` | Drives a slider to interpolate between layered backgrounds and updates a label with the current time of day. |
 
-## Usage
+## Editor Utilities
 
-1. **Import the project** into Unity (version 2020.3 or later recommended) by placing the `Assets` folder into your project.  Ensure that the Input System package is installed and enabled if you want multi‑touch support.
-2. **Create scenes** corresponding to the Main Menu, Touch Pop Test, Scrollable Text Test and Background Slider Test.  Add them to the build settings.
-3. **Assign scripts and assets**:
-   - Add the `SceneLoader` component to an empty GameObject on the Main Menu and wire up your menu buttons’ `OnClick` events to call `LoadSceneByName` with the appropriate scene names.  You can also assign a `Quit` button to exit play mode.
-   - In the Touch Pop Test scene, create a prefab for the target using `Sprites/Target.png` and a `Collider2D`.  Then add a `TouchPopManager` to an empty GameObject, assign the prefab, configure spawn area/lifetimes and link a UI Text for the score.
-   - In the Scrollable Text Test scene, set up a popup panel with a `ScrollRect` and long text, then attach a `ScrollableTextController` to a convenient GameObject and assign the panel, scroll rect and text.  Hook up open/close buttons to call `OpenPopup` and `ClosePopup`.
-   - In the Background Slider Test scene, create a Canvas with four `Image` objects for the backgrounds and a `Slider`.  Attach `BackgroundBlendController` to a GameObject and assign the images, slider and an optional label.  Provide human‑readable labels via the inspector if desired.
+| Script | Purpose |
+| --- | --- |
+| `SceneBuilder.cs` | Programmatically creates all four scenes and the Target prefab. Run via **Tools > TouchTable > Build All Scenes**. |
+| `AndroidBuilder.cs` | Headless Android APK build. Run via `-executeMethod AndroidBuilder.Build`. |
+| `PCBuilder.cs` | Headless Linux standalone build. Run via `-executeMethod PCBuilder.Build`. |
 
-4. **Test** on a mobile device or in the editor (multi‑touch can be simulated with multiple touches in the device or with separate mouse clicks in the editor).
+---
+
+## Build & Run
+
+### Requirements
+
+* **Unity 6000.3.11f1** (or later 6.x LTS)
+* **New Input System** package (included in `Packages/manifest.json`)
+* **Android Build Support** module (for Android builds) — install via Unity Hub → Installs → Add Modules
+
+---
+
+### Play in Editor (all platforms)
+
+1. Open the project in Unity Hub.
+2. In the menu bar run **Tools > TouchTable > Build All Scenes** to generate all scenes and the Target prefab.
+3. Open `Assets/Scenes/MainMenu.unity`.
+4. Press **Play**.
+
+---
+
+### PC Standalone — Linux
+
+```bash
+/home/<user>/Unity/Hub/Editor/6000.3.11f1/Editor/Unity \
+  -batchmode -nographics \
+  -projectPath /path/to/TouchTable \
+  -executeMethod PCBuilder.Build \
+  -quit \
+  -logFile /tmp/unity_pc_build.log
+
+# Run the build
+/tmp/TouchTable-PC/TouchTable
+```
+
+### PC Standalone — macOS
+
+```bash
+/Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/MacOS/Unity \
+  -batchmode -nographics \
+  -projectPath /path/to/TouchTable \
+  -executeMethod PCBuilder.Build \
+  -quit \
+  -logFile /tmp/unity_pc_build.log
+```
+
+> **Note:** `PCBuilder.cs` targets `StandaloneLinux64` by default.  Change `BuildTarget.StandaloneLinux64` to `BuildTarget.StandaloneWindows64` or `BuildTarget.StandaloneOSX` before building on other platforms.
+
+### PC Standalone — Windows
+
+```bat
+"C:\Program Files\Unity\Hub\Editor\6000.3.11f1\Editor\Unity.exe" ^
+  -batchmode -nographics ^
+  -projectPath C:\path\to\TouchTable ^
+  -executeMethod PCBuilder.Build ^
+  -quit ^
+  -logFile C:\Temp\unity_pc_build.log
+```
+
+---
+
+### Android
+
+#### Requirements
+* Android Build Support module installed in Unity Hub.
+* A device with **USB Debugging** enabled (Settings → Developer Options → USB Debugging).
+
+```bash
+# Build APK
+/home/<user>/Unity/Hub/Editor/6000.3.11f1/Editor/Unity \
+  -batchmode -nographics \
+  -projectPath /path/to/TouchTable \
+  -executeMethod AndroidBuilder.Build \
+  -quit \
+  -logFile /tmp/unity_android_build.log
+
+# Install on connected device
+adb install /tmp/TouchTable.apk
+
+# Launch on device
+adb shell am start -n "com.TouchTable.TouchTable/com.unity3d.player.UnityPlayerGameActivity"
+```
+
+> **ADB location** (if not on PATH):
+> `<UnityEditorRoot>/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb`
+
+---
+
+### iOS
+
+> **Requires macOS + Xcode.**
+
+1. In Unity open **File > Build Settings**, select **iOS**, click **Switch Platform**.
+2. Click **Build** and choose an output folder (e.g. `Build/iOS`).
+3. Open the generated `.xcodeproj` in Xcode.
+4. Select your development team under **Signing & Capabilities**.
+5. Connect your device and press **Run** (or **Product > Archive** to distribute).
+
+---
 
 ## Notes
 
-This repository does not include prebuilt `.unity` scene files or package definitions.  It is intended as a starting point that you can integrate into an existing Unity project.  Feel free to modify the scripts or assets to suit your particular needs.
+* The project uses the **New Input System** exclusively.  The `EventSystem` in each scene uses `InputSystemUIInputModule`; the legacy `StandaloneInputModule` is not used.
+* Touch and mouse input are both handled in `TouchPopManager` using `Touchscreen.current` and `Mouse.current`, so all scenes work on desktop and mobile without code changes.
+* Scene files and the Target prefab are generated by `SceneBuilder.cs` and are committed to the repository.  Re-run **Tools > TouchTable > Build All Scenes** any time scripts or layout changes are made.

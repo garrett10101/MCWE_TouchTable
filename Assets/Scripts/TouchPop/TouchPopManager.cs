@@ -105,10 +105,10 @@ public class TouchPopManager : MonoBehaviour
         Camera cam = Camera.main;
         Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, cam.nearClipPlane));
         Vector2 pos2D = new Vector2(worldPoint.x, worldPoint.y);
-        RaycastHit2D hit = Physics2D.Raycast(pos2D, Vector2.zero);
-        if (hit.collider != null)
+        Collider2D hit = Physics2D.OverlapPoint(pos2D);
+        if (hit != null)
         {
-            TouchTarget target = hit.collider.GetComponent<TouchTarget>();
+            TouchTarget target = hit.GetComponent<TouchTarget>();
             if (target != null)
             {
                 HitTarget(target);
