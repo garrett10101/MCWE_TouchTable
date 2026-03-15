@@ -1,8 +1,5 @@
 using UnityEditor;
 
-/// <summary>
-/// Runs SceneBuilder.BuildAllScenes once on the next Unity startup, then deletes itself.
-/// </summary>
 [InitializeOnLoad]
 public static class AutoBuildScenes
 {

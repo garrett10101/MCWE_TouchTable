@@ -176,7 +176,6 @@ public static class SceneBuilder
         controller.popupPanel = popupPanel;
         controller.scrollRect = scrollRect;
         controller.contentText = contentText;
-        controller.longText = longText;
 
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/ScrollableText.unity");
     }
@@ -431,6 +430,11 @@ public static class SceneBuilder
         panelRt.offsetMin = new Vector2(20f, 20f);
         panelRt.offsetMax = new Vector2(-20f, -20f);
         panel.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.97f);
+        // Use CanvasGroup to hide/show so ContentSizeFitter can always measure while active.
+        CanvasGroup cg = panel.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        cg.blocksRaycasts = false;
+        cg.interactable = false;
 
         // Close button — top-right of panel
         GameObject closeBtn = CreateButton(panel.transform, "CloseButton", "X", new Color(0.6f, 0.15f, 0.15f));
@@ -440,8 +444,9 @@ public static class SceneBuilder
         closeBtnRt.sizeDelta = new Vector2(80f, 80f);
         closeBtnRt.anchoredPosition = new Vector2(-10f, -10f);
 
-        // Panel title
+        // Panel title — disable raycastTarget so it doesn't block the close button
         GameObject titleGo = CreateText(panel.transform, "PanelTitle", "Information", 34, FontStyle.Bold);
+        titleGo.GetComponent<Text>().raycastTarget = false;
         RectTransform titleRt = titleGo.GetComponent<RectTransform>();
         titleRt.anchorMin = new Vector2(0f, 1f);
         titleRt.anchorMax = new Vector2(1f, 1f);
@@ -470,12 +475,12 @@ public static class SceneBuilder
         viewportRt.anchorMax = Vector2.one;
         viewportRt.offsetMin = viewportRt.offsetMax = Vector2.zero;
         Image viewportImg = viewportGo.AddComponent<Image>();
-        viewportImg.color = new Color(0f, 0f, 0f, 0f);
+        viewportImg.color = Color.white; // Must be opaque — Mask uses alpha to define clip area
         viewportImg.raycastTarget = false;
         viewportGo.AddComponent<Mask>().showMaskGraphic = false;
         scrollRect.viewport = viewportRt;
 
-        // Content
+        // Content — top-anchored, full width; height set at runtime by controller
         GameObject contentGo = new GameObject("Content");
         contentGo.transform.SetParent(viewportGo.transform, false);
         RectTransform contentRt = contentGo.AddComponent<RectTransform>();
@@ -483,20 +488,17 @@ public static class SceneBuilder
         contentRt.anchorMax = new Vector2(1f, 1f);
         contentRt.pivot = new Vector2(0.5f, 1f);
         contentRt.anchoredPosition = Vector2.zero;
-        contentRt.sizeDelta = new Vector2(0f, 0f);
-        ContentSizeFitter csf = contentGo.AddComponent<ContentSizeFitter>();
-        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        VerticalLayoutGroup vlg = contentGo.AddComponent<VerticalLayoutGroup>();
-        vlg.padding = new RectOffset(20, 20, 10, 10);
-        vlg.childControlWidth = true;
-        vlg.childControlHeight = true;
-        vlg.childForceExpandWidth = true;
-        vlg.childForceExpandHeight = false;
+        contentRt.sizeDelta = new Vector2(0f, 2000f);
         scrollRect.content = contentRt;
 
-        // Content text
+        // Content text — stretch-fill the content area
         GameObject textGo = new GameObject("ContentText");
         textGo.transform.SetParent(contentGo.transform, false);
+        RectTransform textRt = textGo.AddComponent<RectTransform>();
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = new Vector2(20f, 10f);
+        textRt.offsetMax = new Vector2(-20f, -10f);
         contentText = textGo.AddComponent<Text>();
         contentText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         contentText.fontSize = 28;
@@ -504,7 +506,10 @@ public static class SceneBuilder
         contentText.horizontalOverflow = HorizontalWrapMode.Wrap;
         contentText.verticalOverflow = VerticalWrapMode.Overflow;
         contentText.alignment = TextAnchor.UpperLeft;
-        textGo.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        contentText.raycastTarget = false;
+
+        // Ensure CloseButton is the last sibling so it renders on top and receives input first
+        closeBtn.transform.SetAsLastSibling();
 
         return panel;
     }
