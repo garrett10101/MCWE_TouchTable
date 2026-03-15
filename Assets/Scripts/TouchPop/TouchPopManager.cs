@@ -101,7 +101,8 @@ public class TouchPopManager : MonoBehaviour
     /// <param name="screenPosition">The screen position of the touch/click.</param>
     private void ProcessTouchAtPosition(Vector2 screenPosition)
     {
-        Vector3 worldPoint = Camera.main.ScreenToWorldPoint(screenPosition);
+        Camera cam = Camera.main;
+        Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, cam.nearClipPlane));
         Vector2 pos2D = new Vector2(worldPoint.x, worldPoint.y);
         RaycastHit2D hit = Physics2D.Raycast(pos2D, Vector2.zero);
         if (hit.collider != null)

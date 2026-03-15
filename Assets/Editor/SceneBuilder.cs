@@ -249,11 +249,14 @@ public static class SceneBuilder
     {
         GameObject go = new GameObject("Main Camera");
         go.tag = "MainCamera";
+        go.transform.position = new Vector3(0f, 0f, -10f);
         Camera cam = go.AddComponent<Camera>();
         cam.orthographic = true;
         cam.orthographicSize = 5f;
         cam.clearFlags = CameraClearFlags.SolidColor;
         cam.backgroundColor = background;
+        cam.nearClipPlane = 0.3f;
+        cam.farClipPlane = 100f;
         go.AddComponent<AudioListener>();
         return go;
     }
