@@ -198,7 +198,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1114,9 +1114,16 @@ MonoBehaviour:
   popupHeight: 650
   imageHeight: 250
   textFontSize: 22
+  popupRotation: 0
   popupPicture: {fileID: 8176609043501473214, guid: d2cfabf67d7dbde488d5b687b997f002, type: 3}
   textFile: {fileID: 0}
   popupText: This is a Test picture
+  popupOffset: {x: 20, y: 20}
+  closeButtonSize: 60
+  closeButtonInset: 4
+  closeButtonColor: {r: 0.7, g: 0.05, b: 0.05, a: 1}
+  closeLabelFontSize: 28
+  closeLabelColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!61 &1063849392
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1211,7 +1218,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_MaskInteraction: 0
+  m_MaskInteraction: 2
   m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
@@ -1509,8 +1516,13 @@ MonoBehaviour:
   markerColor: {r: 0.2, g: 0.7, b: 1, a: 1}
   popupWidth: 300
   popupHeight: 300
-  positionMode: 1
-  tapOffset: {x: 20, y: 20}
+  popupRotation: 0
+  popupOffset: {x: 20, y: 20}
+  closeButtonSize: 60
+  closeButtonInset: 4
+  closeButtonColor: {r: 0.7, g: 0.05, b: 0.05, a: 1}
+  closeLabelFontSize: 28
+  closeLabelColor: {r: 1, g: 1, b: 1, a: 1}
   slides:
   - picture: {fileID: 6830841543013695402, guid: 3676f85d73dbc664cbb3966041013f79, type: 3}
     caption: 
@@ -1622,7 +1634,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_MaskInteraction: 0
+  m_MaskInteraction: 2
   m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2206,8 +2218,13 @@ MonoBehaviour:
   markerColor: {r: 1, g: 0.5, b: 0, a: 1}
   popupWidth: 640
   popupHeight: 520
-  positionMode: 1
-  tapOffset: {x: 20, y: 20}
+  popupRotation: 180
+  popupOffset: {x: 20, y: 20}
+  closeButtonSize: 60
+  closeButtonInset: 4
+  closeButtonColor: {r: 0.7, g: 0.05, b: 0.05, a: 1}
+  closeLabelFontSize: 28
+  closeLabelColor: {r: 1, g: 1, b: 1, a: 1}
   videoClip: {fileID: 32900000, guid: 55ac43db2c7cee44786d1338b1b4c353, type: 3}
   videoWidth: 616
   videoHeight: 346
@@ -2312,7 +2329,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_MaskInteraction: 0
+  m_MaskInteraction: 2
   m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0

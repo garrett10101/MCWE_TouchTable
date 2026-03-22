@@ -15,8 +15,7 @@ using TMPro;
 ///    - Marker Sprite:    drag a circle/pin sprite (optional — falls back to Unity Knob)
 ///    - Marker Color:     pick your color
 ///    - Popup Width / Height: size of the dark popup panel (default 620 × 680)
-///    - Position Mode:    NearMarker opens near tap; Centered always centers on screen
-///    - Tap Offset:       nudge popup away from finger (NearMarker only)
+///    - Popup Offset:     canvas-space (X, Y) offset from the marker position (default 20, 20)
 ///    - Slides:           expand the array, set Size, and for each element drag a Sprite
 ///                        into Picture and optionally type a Caption
 ///    - Show Captions:    global toggle; when off the caption strip is always hidden
@@ -43,12 +42,20 @@ public class PopupImageSlider : MonoBehaviour, IPointerClickHandler
     public Color  markerColor = new Color(0.2f, 0.7f, 1f, 1f);
 
     [Header("Popup Layout")]
-    public float             popupWidth   = 620f;
-    public float             popupHeight  = 680f;
-    public PopupPositionMode positionMode = PopupPositionMode.NearMarker;
-    public Vector2           tapOffset    = new Vector2(20f, 20f);
+    public float popupWidth   = 620f;
+    public float popupHeight  = 680f;
     [Range(0f, 360f)]
-    public float             popupRotation = 0f;
+    public float popupRotation = 0f;
+
+    [Header("Popup Position")]
+    public Vector2 popupOffset = new Vector2(20f, 20f);
+
+    [Header("Close Button Style")]
+    public float closeButtonSize    = 60f;
+    public float closeButtonInset   = 4f;
+    public Color closeButtonColor   = new Color(0.7f, 0.05f, 0.05f, 1f);
+    public float closeLabelFontSize = 28f;
+    public Color closeLabelColor    = Color.white;
 
     [Header("Image Slides")]
     public ImageSlide[] slides;
@@ -67,24 +74,34 @@ public class PopupImageSlider : MonoBehaviour, IPointerClickHandler
 
     private ImageSliderPopupPanel _popupPanel;
 
+    // Called by Unity Editor when the component is first added or Reset is clicked.
+    // Pre-populates markerSprite with the built-in Knob as a visible placeholder.
+    private void Reset()
+    {
+        markerSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.sprite = markerSprite;
+    }
+
     private void Awake()
     {
         var sr = GetComponent<SpriteRenderer>();
-        sr.sprite = markerSprite != null
-            ? markerSprite
-            : Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        if (markerSprite != null) sr.sprite = markerSprite;
         sr.color = markerColor;
 
         var col = GetComponent<BoxCollider2D>();
         if (sr.sprite != null)
             col.size = sr.sprite.bounds.size;
 
-        if (Camera.main != null && Camera.main.GetComponent<Physics2DRaycaster>() == null)
-            Camera.main.gameObject.AddComponent<Physics2DRaycaster>();
     }
 
     private void Start()
     {
+        // Physics2DRaycaster is required for IPointerClickHandler to receive events from 2D colliders.
+        // Added in Start() (not Awake()) so Camera.main is reliably available on Android.
+        if (Camera.main != null && Camera.main.GetComponent<Physics2DRaycaster>() == null)
+            Camera.main.gameObject.AddComponent<Physics2DRaycaster>();
+
         if (slides == null || slides.Length == 0)
         {
             Debug.LogWarning($"[PopupImageSlider] '{name}': Slides array is empty — popup will not open.");
@@ -112,7 +129,7 @@ public class PopupImageSlider : MonoBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         if (_popupPanel != null)
-            _popupPanel.Show(eventData.position);
+            _popupPanel.Show();
     }
 
     private void OnDestroy()
@@ -159,6 +176,7 @@ public class ImageSliderPopupPanel : MonoBehaviour
         bdRect.anchorMin = Vector2.zero; bdRect.anchorMax = Vector2.one;
         bdRect.offsetMin = Vector2.zero; bdRect.offsetMax = Vector2.zero;
         bd.GetComponent<Image>().color = Color.clear;
+        bd.GetComponent<Image>().raycastTarget = false;
 
         // ── PopupContent: dark panel, centered anchor, top-left pivot ──────────
         var contentGo = new GameObject("PopupContent", typeof(RectTransform), typeof(Image));
@@ -172,10 +190,10 @@ public class ImageSliderPopupPanel : MonoBehaviour
         contentGo.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
         // ── Layout constants ───────────────────────────────────────────────────
-        const float closeSize  = 60f;
-        const float closeInset = 4f;
-        const float sidePad    = 12f;
-        const float sliderPad  = 10f;
+        float closeSize  = config.closeButtonSize;
+        float closeInset = config.closeButtonInset;
+        const float sidePad   = 12f;
+        const float sliderPad = 10f;
 
         float sliderBottom  = sliderPad;
         float sliderTop     = sliderBottom + config.sliderHeight;
@@ -187,30 +205,6 @@ public class ImageSliderPopupPanel : MonoBehaviour
 
         if (imageHeight < 50f)
             Debug.LogWarning($"[PopupImageSlider] '{config.name}': imageHeight={imageHeight:F0} is very small — check popupHeight/captionHeight/sliderHeight settings.");
-
-        // ── Close button: top-right red X ─────────────────────────────────────
-        var closeGo = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
-        closeGo.transform.SetParent(contentGo.transform, false);
-        var closeRect = closeGo.GetComponent<RectTransform>();
-        closeRect.anchorMin        = new Vector2(1f, 1f);
-        closeRect.anchorMax        = new Vector2(1f, 1f);
-        closeRect.pivot            = new Vector2(1f, 1f);
-        closeRect.sizeDelta        = new Vector2(closeSize, closeSize);
-        closeRect.anchoredPosition = new Vector2(-closeInset, -closeInset);
-        closeGo.GetComponent<Image>().color = new Color(0.7f, 0.05f, 0.05f, 1f);
-        closeGo.GetComponent<Button>().onClick.AddListener(Close);
-
-        var closeLbl = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        closeLbl.transform.SetParent(closeGo.transform, false);
-        var clr = closeLbl.GetComponent<RectTransform>();
-        clr.anchorMin = Vector2.zero; clr.anchorMax = Vector2.one;
-        clr.offsetMin = Vector2.zero; clr.offsetMax = Vector2.zero;
-        var clTmp = closeLbl.GetComponent<TextMeshProUGUI>();
-        clTmp.text      = "X";
-        clTmp.alignment = TextAlignmentOptions.Center;
-        clTmp.fontSize  = 28;
-        clTmp.fontStyle = FontStyles.Bold;
-        clTmp.color     = Color.white;
 
         // ── ImageStack: two stacked Images for crossfade ───────────────────────
         var stackGo = new GameObject("ImageStack", typeof(RectTransform));
@@ -349,15 +343,23 @@ public class ImageSliderPopupPanel : MonoBehaviour
         if (!config.showCaptions)
             _captionBox.SetActive(false);
 
+        // ── Close button ───────────────────────────────────────────────────────
+        PopupUIHelper.CreateCloseButton(contentGo, Close,
+            closeSize, closeInset,
+            config.closeButtonColor, config.closeLabelFontSize, config.closeLabelColor);
+
         SetVisible(false);
     }
 
-    public void Show(Vector2 screenPos)
+    public void Show()
     {
-        if (_config.positionMode == PopupPositionMode.NearMarker)
-            PositionNear(screenPos);
-        else
-            PositionCentered();
+        var canvasRect = _canvas.transform as RectTransform;
+        Camera worldCam = Camera.main;
+        Camera uiCam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
+        _content.anchoredPosition = PopupUIHelper.GetPopupAnchoredPosition(
+            _config.transform.position, _config.popupOffset,
+            canvasRect, _config.popupWidth, _config.popupHeight,
+            worldCam, uiCam);
 
         // Reset slider to first image each open
         if (_slider != null)
@@ -414,27 +416,5 @@ public class ImageSliderPopupPanel : MonoBehaviour
         _group.alpha          = visible ? 1f : 0f;
         _group.blocksRaycasts = visible;
         _group.interactable   = visible;
-    }
-
-    private void PositionNear(Vector2 screenPos)
-    {
-        var canvasRect = _canvas.transform as RectTransform;
-        Camera uiCam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
-
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            canvasRect, screenPos, uiCam, out Vector2 localPos);
-
-        Vector2 target     = localPos + _config.tapOffset;
-        Vector2 canvasHalf = canvasRect.rect.size * 0.5f;
-
-        target.x = Mathf.Clamp(target.x, -canvasHalf.x, canvasHalf.x - _config.popupWidth);
-        target.y = Mathf.Clamp(target.y, -canvasHalf.y + _config.popupHeight, canvasHalf.y);
-
-        _content.anchoredPosition = target;
-    }
-
-    private void PositionCentered()
-    {
-        _content.anchoredPosition = new Vector2(-_config.popupWidth * 0.5f, _config.popupHeight * 0.5f);
     }
 }

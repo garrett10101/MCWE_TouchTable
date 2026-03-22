@@ -1,9 +1,16 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Camera))]
 public class MapCameraFit : MonoBehaviour
 {
     public SpriteRenderer mapRenderer;
+
+    private void Awake()
+    {
+        if (GetComponent<Physics2DRaycaster>() == null)
+            gameObject.AddComponent<Physics2DRaycaster>();
+    }
 
     void Start()
     {

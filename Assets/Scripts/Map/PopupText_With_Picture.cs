@@ -42,34 +42,61 @@ public class PopupText_With_Picture : MonoBehaviour, IPointerClickHandler
     [TextArea(4, 12)]
     public string popupText = "";
 
-    // One panel shared by all markers in the scene; rebuilt lazily after scene reload.
-    private static SharedPopupPanel _panel;
+    [Header("Popup Position")]
+    public Vector2 popupOffset = new Vector2(20f, 20f);
+
+    [Header("Close Button Style")]
+    public float closeButtonSize    = 60f;
+    public float closeButtonInset   = 4f;
+    public Color closeButtonColor   = new Color(0.7f, 0.05f, 0.05f, 1f);
+    public float closeLabelFontSize = 28f;
+    public Color closeLabelColor    = Color.white;
+
+    private SharedPopupPanel _panel;
+
+    // Called by Unity Editor when the component is first added or Reset is clicked.
+    // Pre-populates markerSprite with the built-in Knob as a visible placeholder.
+    private void Reset()
+    {
+        markerSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.sprite = markerSprite;
+    }
 
     private void Awake()
     {
         var spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteRenderer.sprite = markerSprite != null
-            ? markerSprite
-            : Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        if (markerSprite != null) spriteRenderer.sprite = markerSprite;
         spriteRenderer.color = markerColor;
 
         var col = GetComponent<BoxCollider2D>();
         if (spriteRenderer.sprite != null)
             col.size = spriteRenderer.sprite.bounds.size;
 
+    }
+
+    private void Start()
+    {
         // Physics2DRaycaster is required for IPointerClickHandler to receive events from 2D colliders.
+        // Added in Start() (not Awake()) so Camera.main is reliably available on Android.
         if (Camera.main != null && Camera.main.GetComponent<Physics2DRaycaster>() == null)
             Camera.main.gameObject.AddComponent<Physics2DRaycaster>();
+    }
+
+    private void OnDestroy()
+    {
+        if (_panel != null)
+            Destroy(_panel.gameObject);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
         string content = textFile != null ? textFile.text : popupText;
-        EnsurePanel().Show(popupPicture, content, eventData.position,
+        EnsurePanel().Show(popupPicture, content, transform.position, popupOffset,
             popupWidth, popupHeight, imageHeight, textFontSize, popupRotation);
     }
 
-    private static SharedPopupPanel EnsurePanel()
+    private SharedPopupPanel EnsurePanel()
     {
         if (_panel != null) return _panel;
 
@@ -88,7 +115,7 @@ public class PopupText_With_Picture : MonoBehaviour, IPointerClickHandler
         var go = new GameObject("MarkerPopup", typeof(RectTransform));
         go.transform.SetParent(canvas.transform, false);
         _panel = go.AddComponent<SharedPopupPanel>();
-        _panel.Build(canvas);
+        _panel.Build(canvas, closeButtonSize, closeButtonInset, closeButtonColor, closeLabelFontSize, closeLabelColor);
         return _panel;
     }
 }
@@ -111,13 +138,15 @@ public class SharedPopupPanel : MonoBehaviour
     private float _popupWidth;
     private float _popupHeight;
 
-    private const float CloseSize = 60f;
-    private const float SidePad   = 12f;
-    private const float TopPad    = CloseSize + 8f;
+    private const float SidePad = 12f;
 
-    public void Build(Canvas canvas)
+    public void Build(Canvas canvas,
+                      float closeSize, float closeInset,
+                      Color closeButtonColor, float closeLabelFontSize, Color closeLabelColor)
     {
         _canvas = canvas;
+
+        float topPad = closeSize + 8f;
 
         // Root — stretches full canvas so backdrop can intercept all clicks
         var root = GetComponent<RectTransform>();
@@ -135,6 +164,7 @@ public class SharedPopupPanel : MonoBehaviour
         bdRect.anchorMin = Vector2.zero; bdRect.anchorMax = Vector2.one;
         bdRect.offsetMin = Vector2.zero; bdRect.offsetMax = Vector2.zero;
         bd.GetComponent<Image>().color = Color.clear;
+        bd.GetComponent<Image>().raycastTarget = false;
 
         // PopupContent — centered anchor, top-left pivot so anchoredPosition maps to tap point
         var contentGo = new GameObject("PopupContent", typeof(RectTransform), typeof(Image));
@@ -146,30 +176,6 @@ public class SharedPopupPanel : MonoBehaviour
         _content.sizeDelta = new Vector2(500f, 650f);
         contentGo.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
-        // Close button — top-right corner, red X
-        var closeGo = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
-        closeGo.transform.SetParent(contentGo.transform, false);
-        var closeRect = closeGo.GetComponent<RectTransform>();
-        closeRect.anchorMin        = new Vector2(1f, 1f);
-        closeRect.anchorMax        = new Vector2(1f, 1f);
-        closeRect.pivot            = new Vector2(1f, 1f);
-        closeRect.sizeDelta        = new Vector2(CloseSize, CloseSize);
-        closeRect.anchoredPosition = new Vector2(-4f, -4f);
-        closeGo.GetComponent<Image>().color = new Color(0.7f, 0.05f, 0.05f, 1f);
-        closeGo.GetComponent<Button>().onClick.AddListener(Close);
-
-        var closeLbl = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        closeLbl.transform.SetParent(closeGo.transform, false);
-        var clr = closeLbl.GetComponent<RectTransform>();
-        clr.anchorMin = Vector2.zero; clr.anchorMax = Vector2.one;
-        clr.offsetMin = Vector2.zero; clr.offsetMax = Vector2.zero;
-        var clTmp = closeLbl.GetComponent<TextMeshProUGUI>();
-        clTmp.text      = "X";
-        clTmp.alignment = TextAlignmentOptions.Center;
-        clTmp.fontSize  = 28;
-        clTmp.fontStyle = FontStyles.Bold;
-        clTmp.color     = Color.white;
-
         // PopupImage — below close button, hidden when no sprite is assigned
         var imgGo = new GameObject("PopupImage", typeof(RectTransform), typeof(Image));
         imgGo.transform.SetParent(contentGo.transform, false);
@@ -180,7 +186,7 @@ public class SharedPopupPanel : MonoBehaviour
         imgRect.offsetMin        = new Vector2(SidePad, 0f);
         imgRect.offsetMax        = new Vector2(-SidePad, 0f);
         imgRect.sizeDelta        = new Vector2(0f, 250f);
-        imgRect.anchoredPosition = new Vector2(0f, -TopPad);
+        imgRect.anchoredPosition = new Vector2(0f, -topPad);
         _imgRect = imgRect;
         _image = imgGo.GetComponent<Image>();
         _image.color          = new Color(0.2f, 0.2f, 0.2f, 1f);
@@ -194,7 +200,7 @@ public class SharedPopupPanel : MonoBehaviour
         scrollRt.anchorMin = Vector2.zero;
         scrollRt.anchorMax = Vector2.one;
         scrollRt.offsetMin = new Vector2(SidePad, 10f);
-        scrollRt.offsetMax = new Vector2(-SidePad, -(TopPad + 250f + 8f));
+        scrollRt.offsetMax = new Vector2(-SidePad, -(topPad + 250f + 8f));
         _scrollRt = scrollRt;
         scrollGo.GetComponent<Image>().color = Color.clear;
 
@@ -271,12 +277,16 @@ public class SharedPopupPanel : MonoBehaviour
         scrollComp.scrollSensitivity = 30f;
         _scroll = scrollComp;
 
+        // Close button — added last so it renders on top of all other children
+        PopupUIHelper.CreateCloseButton(contentGo, Close,
+            closeSize, closeInset, closeButtonColor, closeLabelFontSize, closeLabelColor);
+
         SetVisible(false);
     }
 
-    public void Show(Sprite picture, string text, Vector2 screenPos,
+    public void Show(Sprite picture, string text, Vector3 markerWorldPos, Vector2 popupOffset,
                      float popupWidth, float popupHeight, float imageHeight, float textFontSize,
-                     float rotation = 0f)
+                     float rotation)
     {
         // Apply per-marker layout
         _popupWidth  = popupWidth;
@@ -284,12 +294,15 @@ public class SharedPopupPanel : MonoBehaviour
         _content.sizeDelta = new Vector2(popupWidth, popupHeight);
         _content.localEulerAngles = new Vector3(0f, 0f, rotation);
 
+        float closeSize = _content.Find("CloseButton")?.GetComponent<RectTransform>().sizeDelta.y ?? 60f;
+        float topPad    = closeSize + 8f;
+
         bool hasImage = picture != null;
         _imgRect.sizeDelta        = new Vector2(0f, imageHeight);
-        _imgRect.anchoredPosition = new Vector2(0f, -TopPad);
+        _imgRect.anchoredPosition = new Vector2(0f, -topPad);
         _imgRect.gameObject.SetActive(hasImage);
 
-        float scrollTop = TopPad + (hasImage ? imageHeight + 8f : 0f);
+        float scrollTop = topPad + (hasImage ? imageHeight + 8f : 0f);
         _scrollRt.offsetMax = new Vector2(-SidePad, -scrollTop);
 
         _text.fontSize = textFontSize;
@@ -302,7 +315,11 @@ public class SharedPopupPanel : MonoBehaviour
 
         _text.text = string.IsNullOrEmpty(text) ? "Content coming soon." : text;
 
-        PositionNear(screenPos);
+        var canvasRect = _canvas.transform as RectTransform;
+        Camera worldCam = Camera.main;
+        Camera uiCam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
+        _content.anchoredPosition = PopupUIHelper.GetPopupAnchoredPosition(
+            markerWorldPos, popupOffset, canvasRect, popupWidth, popupHeight, worldCam, uiCam);
 
         _scroll.verticalNormalizedPosition = 1f;
         SetVisible(true);
@@ -318,22 +335,5 @@ public class SharedPopupPanel : MonoBehaviour
         _group.alpha          = visible ? 1f : 0f;
         _group.blocksRaycasts = visible;
         _group.interactable   = visible;
-    }
-
-    private void PositionNear(Vector2 screenPos)
-    {
-        var canvasRect = _canvas.transform as RectTransform;
-        Camera uiCam   = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
-
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            canvasRect, screenPos, uiCam, out Vector2 localPos);
-
-        Vector2 target     = localPos + new Vector2(20f, 20f);
-        Vector2 canvasHalf = canvasRect.rect.size * 0.5f;
-
-        target.x = Mathf.Clamp(target.x, -canvasHalf.x, canvasHalf.x - _popupWidth);
-        target.y = Mathf.Clamp(target.y, -canvasHalf.y + _popupHeight, canvasHalf.y);
-
-        _content.anchoredPosition = target;
     }
 }

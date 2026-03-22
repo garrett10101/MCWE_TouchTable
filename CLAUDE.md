@@ -8,47 +8,12 @@ Unity 6000.3.11f1 2D project demonstrating multi-touch/mouse input on PC and And
 
 ## Build Commands
 
-### Build Manager (in Unity Editor)
-Open **Tools → TouchTable → Build Manager** — an interactive EditorWindow with three tabs:
-- **Scene Setup** — discover/toggle scenes, apply to EditorBuildSettings
-- **PC Build** — select Linux x64 / Windows x64 / macOS, set output folder, click Build
-- **Mobile Build** — Android: refresh adb devices, build APK, optionally install; iOS: build Xcode project (macOS only)
-
-### PC Standalone (headless)
-```bash
-# Linux
-~/Unity/Hub/Editor/6000.3.11f1/Editor/Unity \
-  -batchmode -nographics \
-  -projectPath /path/to/TouchTable \
-  -executeMethod PCBuilder.Build \
-  -quit \
-  -logFile /tmp/unity_pc_build.log
-
-# Run the built binary
-/tmp/TouchTable-PC/TouchTable
-```
-Change `BuildTarget.StandaloneLinux64` in `Assets/Editor/PCBuilder.cs` for Windows/macOS targets.
-
-### Android APK (headless)
-```bash
-~/Unity/Hub/Editor/6000.3.11f1/Editor/Unity \
-  -batchmode -nographics \
-  -projectPath /path/to/TouchTable \
-  -executeMethod AndroidBuilder.Build \
-  -quit \
-  -logFile /tmp/unity_android_build.log
-
-adb install -r /tmp/TouchTable.apk
-```
-SDK/NDK/JDK paths in `Assets/Editor/AndroidBuilder.cs` are hardcoded to Linux Unity installation — adjust for macOS/Windows.
-
-### iOS
-Manual: File → Build Settings → iOS → Switch Platform → Build → open in Xcode.
+Use Unity's built-in **File → Build Settings** workflow for all platforms (PC, Android, iOS). Switch platform, configure settings, and click Build.
 
 ## Architecture
 
 ### Scene Management
-Scenes are maintained manually in the Unity Editor. Use the **Build Manager → Scene Setup** tab to manage which scenes are registered in EditorBuildSettings. Edit scenes directly in the Unity Editor and save them as usual.
+Scenes are maintained manually in the Unity Editor via **File → Build Settings**. Edit scenes directly in the Unity Editor and save them as usual.
 
 ### Input System
 Uses the **New Input System exclusively** (package: `com.unity.inputsystem`). EventSystem uses `InputSystemUIInputModule`. Touch input via `Touchscreen.current.touches`, mouse via `Mouse.current`. No legacy `Input` class.
@@ -57,7 +22,6 @@ Uses the **New Input System exclusively** (package: `com.unity.inputsystem`). Ev
 All canvases: Screen Space Overlay, reference resolution **1080×1920** (portrait), Scale With Screen Size at 50% width/height match.
 
 ### Script Roles
-- `TouchTableBuildWindow.cs` — Interactive EditorWindow (Tools → TouchTable → Build Manager). Three tabs: Scene Setup (scan/toggle scenes, apply to EditorBuildSettings), PC Build (Linux/Windows/macOS standalone), Mobile Build (Android APK with adb device list + install; iOS Xcode project on macOS).
 - `SceneLoader.cs` — Reusable component on every scene's canvas. Call `LoadSceneByName(name)` or `Quit()` from buttons.
 - `TouchPopManager.cs` — Spawns/tracks targets, processes all touch/mouse input via `Physics2D.OverlapPoint` raycasts. `TouchTarget.cs` is a thin delegate that calls back into the manager.
 - `ScrollableTextController.cs` — Shows/hides popup via `CanvasGroup` (not SetActive). Water conservation text is hardcoded as a constant in the file.
@@ -72,7 +36,6 @@ All canvases: Screen Space Overlay, reference resolution **1080×1920** (portrai
 2. Add `Sprite Renderer`, `Box Collider 2D`, `PopupText_With_Picture`.
 3. Set Inspector fields: Marker Sprite/Color, Popup Picture (optional), Text File or Popup Text.
 4. Position on map in Scene view. Press Play — click marker to show popup.
-5. Run **Tools → TouchTable → Setup Map Popup** only to clean up old `PopupPanel`/`PopupManager` objects.
 - For video markers: use `PopupVideo` instead of `PopupText_With_Picture`. Assign a `VideoClip` asset and configure layout, title, and close behavior via the Inspector.
 - For image-slider markers: use `PopupImageSlider` instead of `PopupText_With_Picture`. Assign `ImageSlide` array entries (Sprite + optional caption) and configure layout via the Inspector.
 
