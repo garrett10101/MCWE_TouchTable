@@ -33,6 +33,8 @@ public class PopupText_With_Picture : MonoBehaviour, IPointerClickHandler
     public float popupHeight  = 650f;
     public float imageHeight  = 250f;
     public float textFontSize = 22f;
+    [Range(0f, 360f)]
+    public float popupRotation = 0f;
 
     [Header("Popup Content")]
     public Sprite    popupPicture;
@@ -64,7 +66,7 @@ public class PopupText_With_Picture : MonoBehaviour, IPointerClickHandler
     {
         string content = textFile != null ? textFile.text : popupText;
         EnsurePanel().Show(popupPicture, content, eventData.position,
-            popupWidth, popupHeight, imageHeight, textFontSize);
+            popupWidth, popupHeight, imageHeight, textFontSize, popupRotation);
     }
 
     private static SharedPopupPanel EnsurePanel()
@@ -126,14 +128,13 @@ public class SharedPopupPanel : MonoBehaviour
 
         _group = gameObject.AddComponent<CanvasGroup>();
 
-        // Backdrop — transparent full-screen button that closes the popup
-        var bd = new GameObject("Backdrop", typeof(RectTransform), typeof(Image), typeof(Button));
+        // Backdrop — plain Image (no Button) so clicks pass through to the map
+        var bd = new GameObject("Backdrop", typeof(RectTransform), typeof(Image));
         bd.transform.SetParent(transform, false);
         var bdRect = bd.GetComponent<RectTransform>();
         bdRect.anchorMin = Vector2.zero; bdRect.anchorMax = Vector2.one;
         bdRect.offsetMin = Vector2.zero; bdRect.offsetMax = Vector2.zero;
         bd.GetComponent<Image>().color = Color.clear;
-        bd.GetComponent<Button>().onClick.AddListener(Close);
 
         // PopupContent — centered anchor, top-left pivot so anchoredPosition maps to tap point
         var contentGo = new GameObject("PopupContent", typeof(RectTransform), typeof(Image));
@@ -274,12 +275,14 @@ public class SharedPopupPanel : MonoBehaviour
     }
 
     public void Show(Sprite picture, string text, Vector2 screenPos,
-                     float popupWidth, float popupHeight, float imageHeight, float textFontSize)
+                     float popupWidth, float popupHeight, float imageHeight, float textFontSize,
+                     float rotation = 0f)
     {
         // Apply per-marker layout
         _popupWidth  = popupWidth;
         _popupHeight = popupHeight;
         _content.sizeDelta = new Vector2(popupWidth, popupHeight);
+        _content.localEulerAngles = new Vector3(0f, 0f, rotation);
 
         bool hasImage = picture != null;
         _imgRect.sizeDelta        = new Vector2(0f, imageHeight);

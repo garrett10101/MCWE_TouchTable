@@ -43,6 +43,8 @@ public class PopupVideo : MonoBehaviour, IPointerClickHandler
     public float             popupHeight   = 520f;
     public PopupPositionMode positionMode  = PopupPositionMode.NearMarker;
     public Vector2           tapOffset     = new Vector2(20f, 20f);
+    [Range(0f, 360f)]
+    public float             popupRotation = 0f;
 
     [Header("Video Content")]
     public VideoClip videoClip;
@@ -140,14 +142,13 @@ public class VideoPopupPanel : MonoBehaviour
 
         _group = gameObject.AddComponent<CanvasGroup>();
 
-        // ── Backdrop: transparent full-screen click-to-dismiss ─────────────────
-        var bd = new GameObject("Backdrop", typeof(RectTransform), typeof(Image), typeof(Button));
+        // ── Backdrop: plain Image (no Button) so clicks pass through to the map ──
+        var bd = new GameObject("Backdrop", typeof(RectTransform), typeof(Image));
         bd.transform.SetParent(transform, false);
         var bdRect = bd.GetComponent<RectTransform>();
         bdRect.anchorMin = Vector2.zero; bdRect.anchorMax = Vector2.one;
         bdRect.offsetMin = Vector2.zero; bdRect.offsetMax = Vector2.zero;
         bd.GetComponent<Image>().color = Color.clear;
-        bd.GetComponent<Button>().onClick.AddListener(Close);
 
         // ── PopupContent: dark panel, centered anchor, top-left pivot ──────────
         var contentGo = new GameObject("PopupContent", typeof(RectTransform), typeof(Image));
@@ -157,6 +158,7 @@ public class VideoPopupPanel : MonoBehaviour
         _content.anchorMax = new Vector2(0.5f, 0.5f);
         _content.pivot     = new Vector2(0f, 1f);
         _content.sizeDelta = new Vector2(config.popupWidth, config.popupHeight);
+        _content.localEulerAngles = new Vector3(0f, 0f, config.popupRotation);
         contentGo.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
         const float closeSize  = 60f;
